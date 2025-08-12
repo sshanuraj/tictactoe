@@ -82,7 +82,8 @@
 
   // Scales for weighted links
   const widthScale = d3.scaleLinear().domain([0.1, 1]).range([1.5, 5]);
-  const opacityScale = d3.scaleLinear().domain([0.1, 1]).range([0.35, 1]);
+  const baseOpacityScale = d3.scaleLinear().domain([0.1, 1]).range([0.35, 0.95]);
+  const glowOpacityScale = d3.scaleLinear().domain([0.1, 1]).range([0.45, 1]);
 
   // Simulation
   const width = window.innerWidth;
@@ -101,7 +102,7 @@
     .attr('class', 'link')
     .attr('marker-end', 'url(#arrow)')
     .style('stroke-width', d => widthScale(d.weight != null ? d.weight : 0.5))
-    .style('stroke-opacity', d => opacityScale(d.weight != null ? d.weight : 0.5));
+    .style('opacity', d => baseOpacityScale(d.weight != null ? d.weight : 0.5));
 
   const node = g.append('g')
     .selectAll('g')
@@ -171,12 +172,8 @@
     const prereqEdges = (parentsMap.get(lower) || []).slice().sort((a,b) => b.weight - a.weight);
     const nextEdges = (childrenMap.get(lower) || []).slice().sort((a,b) => b.weight - a.weight);
 
-    function badge(scope) {
-      return `<span class="badge">${scope}</span>`;
-    }
-    function bar(widthPct) {
-      return `<div class="bar-wrap"><div class="bar" style="width:${Math.round(widthPct)}%"></div></div>`;
-    }
+    function badge(scope) { return `<span class="badge">${scope}</span>`; }
+    function bar(widthPct) { return `<div class="bar-wrap"><div class="bar" style="width:${Math.round(widthPct)}%"></div></div>`; }
 
     const prereqHtml = prereqEdges.length ? prereqEdges.map(e => {
       const name = canonicalByLower.get(e.id) || e.id;
@@ -204,7 +201,8 @@
   function reapplyBaseLinkStyles() {
     link
       .style('stroke-width', d => widthScale(d.weight != null ? d.weight : 0.5))
-      .style('stroke-opacity', d => opacityScale(d.weight != null ? d.weight : 0.5))
+      .style('opacity', d => baseOpacityScale(d.weight != null ? d.weight : 0.5))
+      .style('filter', null)
       .attr('marker-end', 'url(#arrow)');
   }
 
@@ -271,8 +269,9 @@
           .classed('glow-link', true)
           .classed('dim', false)
           .attr('marker-end', 'url(#arrow-glow)')
-          .style('stroke-width', widthScale(w) + 1)
-          .style('stroke-opacity', Math.max(0.8, opacityScale(w)));
+          .style('stroke-width', widthScale(w) + 1.5)
+          .style('opacity', glowOpacityScale(w))
+          .style('filter', `drop-shadow(0 0 ${Math.round(6 + 12 * w)}px var(--link-glow))`);
       }
     });
 
@@ -281,9 +280,7 @@
 
   function highlightTopic(query) {
     const canonical = canonicalizeQuery(query);
-    if (!canonical) {
-      shake(searchBox); return;
-    }
+    if (!canonical) { shake(searchBox); return; }
     applyGlow(canonical.toLowerCase());
   }
 

@@ -67,7 +67,7 @@ html, body {
 .node.dim circle, .node.dim text { opacity: 0.28; }
 .glow-node circle { filter: drop-shadow(0 0 10px var(--accent)) drop-shadow(0 0 28px var(--accent)); r: 22 !important; }
 .glow-target circle { filter: drop-shadow(0 0 12px var(--accent-2)) drop-shadow(0 0 34px var(--accent-2)); r: 26 !important; }
-.glow-link { stroke: var(--link-glow) !important; stroke-width: 3px !important; filter: drop-shadow(0 0 8px var(--link-glow)); }
+.glow-link { stroke: var(--link-glow); filter: drop-shadow(0 0 8px var(--link-glow)); }
 
 /* Info Panel */
 #infoPanel { position: absolute; top: 14px; right: 16px; width: 360px; max-height: calc(100vh - 28px); overflow: auto; border-radius: 14px; background: rgba(20, 26, 36, 0.75); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(8px); box-shadow: 0 20px 40px rgba(0,0,0,0.45), 0 0 30px rgba(0,212,255,0.18); padding: 14px 16px; z-index: 30; display: none; }
