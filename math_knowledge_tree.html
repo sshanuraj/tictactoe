@@ -139,8 +139,8 @@
   .legend strong { color: var(--text); }
 
   /* Graph */
-  svg { width: 100vw; height: 100vh; cursor: grab; }
-  svg:active { cursor: grabbing; }
+  #graph { width: 100vw; height: 100vh; cursor: grab; }
+  #graph:active { cursor: grabbing; }
 
   .link {
     stroke: var(--link);
@@ -194,7 +194,7 @@
   </div>
   <div id="suggestions"><ul></ul></div>
 
-  <svg></svg>
+  <svg id="graph"></svg>
 
   <div class="legend">
     <div><strong>Tip</strong>: Pan with mouse, scroll to zoom, drag nodes to arrange, double-click a node to pin/unpin.</div>
@@ -257,7 +257,7 @@
     ];
 
     // Dimensions
-    const svg = d3.select('svg');
+    const svg = d3.select('#graph');
     const width = window.innerWidth;
     const height = window.innerHeight;
 
