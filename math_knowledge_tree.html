@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mathematics Knowledge Tree — Premium</title>
+  <link rel="stylesheet" href="math_tree.css" />
+</head>
+<body>
+  <div class="controls">
+    <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.471 6.471 0 0 0 1.57-4.23 6.5 6.5 0 1 0-6.5 6.5 6.471 6.471 0 0 0 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14Z" />
+    </svg>
+    <input id="searchBox" type="text" placeholder="Search any math topic… (Enter)" autocomplete="off" />
+    <button id="searchButton" title="Search (Enter)">Search</button>
+    <button id="resetButton" title="Clear highlight & reset view">Reset</button>
+  </div>
+  <div id="suggestions"><ul></ul></div>
+
+  <svg id="graph"></svg>
+
+  <div class="legend">
+    <div><strong>Tip</strong>: Pan with mouse, scroll to zoom, drag nodes to arrange.</div>
+    <div>Double-click a node to open details. Hold Shift + double-click to pin/unpin.</div>
+    <div>Arrows show prerequisite ➜ next topic. Arrow brightness/width reflects contribution strength.</div>
+  </div>
+
+  <div id="infoPanel">
+    <button class="close-btn" id="infoClose">Close</button>
+    <h3 id="infoTitle"></h3>
+    <p id="infoDesc"></p>
+    <div class="meta" id="infoMeta"></div>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="math_tree_data.js"></script>
+  <script src="math_tree_app.js"></script>
+</body>
+</html>
