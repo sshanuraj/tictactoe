@@ -1,4 +1,4 @@
-// Mathematics Knowledge Tree data
+// Mathematics Knowledge Tree data (weighted)
 // Exposes global arrays: MATH_NODES, MATH_LINKS
 
 window.MATH_NODES = [
@@ -21,10 +21,13 @@ window.MATH_NODES = [
   { id: 'Discrete Mathematics', group: 5, aliases: ['Discrete Math'], desc: 'Logic, sets, functions, combinatorics, graphs, and proof techniques for discrete structures.' },
   { id: 'Set Theory', group: 5, aliases: [], desc: 'Foundations: sets, relations, functions, cardinality, and basic axioms.' },
   { id: 'Mathematical Logic', group: 5, aliases: ['Logic'], desc: 'Propositional and first-order logic, proofs, completeness, and computability basics.' },
-  { id: 'Probability', group: 6, aliases: ['Prob'], desc: 'Random variables, distributions, expectation, variance, law of large numbers, and CLT.' },
+
+  // Probability/statistics split
+  { id: 'Probability (Intro)', group: 6, aliases: ['Probability', 'Prob'], desc: 'Elementary probability: combinatorics, random variables, expectation, common distributions, LLN/CLT (informal).' },
+  { id: 'Probability (Measure-Theoretic)', group: 8, aliases: ['Advanced Probability'], desc: 'Probability via measure theory: probability spaces, random variables as measurable functions, convergence modes, martingales (intro).' },
   { id: 'Statistics', group: 6, aliases: ['Stats'], desc: 'Data, estimation, hypothesis testing, regression, and inference techniques.' },
 
-  // Advanced core
+  // Analysis and beyond
   { id: 'Real Analysis', group: 7, aliases: ['Analysis'], desc: 'Rigorous study of real numbers, sequences, continuity, differentiation, and integration.' },
   { id: 'Complex Analysis', group: 7, aliases: [], desc: 'Functions of a complex variable: analyticity, contour integration, residues, conformal maps.' },
   { id: 'Measure Theory', group: 7, aliases: [], desc: 'Sigma-algebras, measures, Lebesgue integration, convergence theorems.' },
@@ -62,76 +65,84 @@ window.MATH_NODES = [
   { id: 'Time Series', group: 7, aliases: [], desc: 'Autoregressive/moving-average models, spectral analysis, forecasting.' }
 ];
 
+// weight: [0.1, 1.0], scope: 'core' | 'supporting' | 'advanced' | 'optional'
 window.MATH_LINKS = [
   // Core spine
-  { source: 'Mathematics', target: 'Arithmetic' },
-  { source: 'Arithmetic', target: 'Pre-Algebra' },
-  { source: 'Pre-Algebra', target: 'Algebra I' },
-  { source: 'Algebra I', target: 'Geometry' },
-  { source: 'Geometry', target: 'Trigonometry' },
-  { source: 'Algebra I', target: 'Discrete Mathematics' },
-  { source: 'Algebra I', target: 'Algebra II' },
-  { source: 'Algebra II', target: 'Pre-Calculus' },
-  { source: 'Trigonometry', target: 'Pre-Calculus' },
-  { source: 'Pre-Calculus', target: 'Calculus I' },
-  { source: 'Calculus I', target: 'Calculus II' },
-  { source: 'Calculus II', target: 'Calculus III' },
-  { source: 'Calculus I', target: 'Linear Algebra' },
+  { source: 'Mathematics', target: 'Arithmetic', weight: 1.0, scope: 'core' },
+  { source: 'Arithmetic', target: 'Pre-Algebra', weight: 0.9, scope: 'core' },
+  { source: 'Pre-Algebra', target: 'Algebra I', weight: 1.0, scope: 'core' },
+  { source: 'Algebra I', target: 'Geometry', weight: 0.7, scope: 'supporting' },
+  { source: 'Geometry', target: 'Trigonometry', weight: 0.6, scope: 'supporting' },
+  { source: 'Algebra I', target: 'Discrete Mathematics', weight: 0.6, scope: 'supporting' },
+  { source: 'Algebra I', target: 'Algebra II', weight: 0.9, scope: 'core' },
+  { source: 'Algebra II', target: 'Pre-Calculus', weight: 0.9, scope: 'core' },
+  { source: 'Trigonometry', target: 'Pre-Calculus', weight: 0.7, scope: 'supporting' },
+  { source: 'Pre-Calculus', target: 'Calculus I', weight: 1.0, scope: 'core' },
+  { source: 'Calculus I', target: 'Calculus II', weight: 1.0, scope: 'core' },
+  { source: 'Calculus II', target: 'Calculus III', weight: 0.9, scope: 'core' },
+  { source: 'Calculus I', target: 'Linear Algebra', weight: 0.4, scope: 'supporting' },
 
-  // Probability/Statistics path
-  { source: 'Calculus I', target: 'Probability' },
-  { source: 'Probability', target: 'Statistics' },
-  { source: 'Probability', target: 'Stochastic Processes' },
-  { source: 'Stochastic Processes', target: 'Time Series' },
+  // Probability/Statistics path (split)
+  { source: 'Algebra II', target: 'Probability (Intro)', weight: 0.5, scope: 'supporting' },
+  { source: 'Combinatorics', target: 'Probability (Intro)', weight: 0.6, scope: 'supporting' },
+  { source: 'Calculus I', target: 'Probability (Intro)', weight: 0.6, scope: 'supporting' },
+  { source: 'Real Analysis', target: 'Probability (Measure-Theoretic)', weight: 0.6, scope: 'advanced' },
+  { source: 'Measure Theory', target: 'Probability (Measure-Theoretic)', weight: 0.9, scope: 'core' },
+  { source: 'Probability (Intro)', target: 'Statistics', weight: 0.8, scope: 'core' },
+  { source: 'Linear Algebra', target: 'Statistics', weight: 0.5, scope: 'supporting' },
+  { source: 'Calculus II', target: 'Statistics', weight: 0.4, scope: 'supporting' },
+  { source: 'Probability (Intro)', target: 'Stochastic Processes', weight: 0.7, scope: 'core' },
+  { source: 'Probability (Measure-Theoretic)', target: 'Stochastic Processes', weight: 0.6, scope: 'advanced' },
+  { source: 'Stochastic Processes', target: 'Time Series', weight: 0.7, scope: 'core' },
 
   // Analysis path
-  { source: 'Calculus II', target: 'Real Analysis' },
-  { source: 'Calculus III', target: 'Real Analysis' },
-  { source: 'Real Analysis', target: 'Measure Theory' },
-  { source: 'Measure Theory', target: 'Probability' },
-  { source: 'Real Analysis', target: 'Fourier Analysis' },
-  { source: 'Real Analysis', target: 'Complex Analysis' },
-  { source: 'Linear Algebra', target: 'Functional Analysis' },
-  { source: 'Real Analysis', target: 'Functional Analysis' },
+  { source: 'Calculus II', target: 'Real Analysis', weight: 0.8, scope: 'supporting' },
+  { source: 'Calculus III', target: 'Real Analysis', weight: 0.5, scope: 'supporting' },
+  { source: 'Real Analysis', target: 'Measure Theory', weight: 0.9, scope: 'core' },
+  { source: 'Measure Theory', target: 'Probability (Intro)', weight: 0.2, scope: 'optional' }, // exposure helps intuition
+  { source: 'Real Analysis', target: 'Fourier Analysis', weight: 0.7, scope: 'supporting' },
+  { source: 'Real Analysis', target: 'Complex Analysis', weight: 0.8, scope: 'core' },
+  { source: 'Linear Algebra', target: 'Functional Analysis', weight: 0.7, scope: 'supporting' },
+  { source: 'Real Analysis', target: 'Functional Analysis', weight: 0.8, scope: 'core' },
 
   // Differential equations & applied
-  { source: 'Calculus II', target: 'Differential Equations' },
-  { source: 'Linear Algebra', target: 'Differential Equations' },
-  { source: 'Differential Equations', target: 'Ordinary Differential Equations' },
-  { source: 'Calculus III', target: 'Partial Differential Equations' },
-  { source: 'Linear Algebra', target: 'Partial Differential Equations' },
-  { source: 'Ordinary Differential Equations', target: 'Dynamical Systems' },
-  { source: 'Ordinary Differential Equations', target: 'Numerical Analysis' },
-  { source: 'Partial Differential Equations', target: 'Numerical Analysis' },
-  { source: 'Calculus II', target: 'Optimization' },
-  { source: 'Linear Algebra', target: 'Optimization' },
-  { source: 'Fourier Analysis', target: 'Partial Differential Equations' },
+  { source: 'Calculus II', target: 'Differential Equations', weight: 0.8, scope: 'core' },
+  { source: 'Linear Algebra', target: 'Differential Equations', weight: 0.7, scope: 'supporting' },
+  { source: 'Differential Equations', target: 'Ordinary Differential Equations', weight: 1.0, scope: 'core' },
+  { source: 'Calculus III', target: 'Partial Differential Equations', weight: 0.8, scope: 'core' },
+  { source: 'Linear Algebra', target: 'Partial Differential Equations', weight: 0.5, scope: 'supporting' },
+  { source: 'Ordinary Differential Equations', target: 'Dynamical Systems', weight: 0.8, scope: 'core' },
+  { source: 'Ordinary Differential Equations', target: 'Numerical Analysis', weight: 0.6, scope: 'supporting' },
+  { source: 'Partial Differential Equations', target: 'Numerical Analysis', weight: 0.6, scope: 'supporting' },
+  { source: 'Calculus II', target: 'Optimization', weight: 0.6, scope: 'supporting' },
+  { source: 'Linear Algebra', target: 'Optimization', weight: 0.8, scope: 'core' },
+  { source: 'Fourier Analysis', target: 'Partial Differential Equations', weight: 0.6, scope: 'supporting' },
 
   // Discrete and algebra
-  { source: 'Discrete Mathematics', target: 'Combinatorics' },
-  { source: 'Discrete Mathematics', target: 'Graph Theory' },
-  { source: 'Discrete Mathematics', target: 'Number Theory' },
-  { source: 'Linear Algebra', target: 'Abstract Algebra' },
-  { source: 'Discrete Mathematics', target: 'Abstract Algebra' },
-  { source: 'Abstract Algebra', target: 'Group Theory' },
-  { source: 'Abstract Algebra', target: 'Ring Theory' },
-  { source: 'Abstract Algebra', target: 'Field Theory' },
-  { source: 'Field Theory', target: 'Galois Theory' },
-  { source: 'Group Theory', target: 'Representation Theory' },
-  { source: 'Abstract Algebra', target: 'Representation Theory' },
+  { source: 'Discrete Mathematics', target: 'Combinatorics', weight: 0.9, scope: 'core' },
+  { source: 'Discrete Mathematics', target: 'Graph Theory', weight: 0.8, scope: 'core' },
+  { source: 'Discrete Mathematics', target: 'Number Theory', weight: 0.6, scope: 'supporting' },
+  { source: 'Linear Algebra', target: 'Abstract Algebra', weight: 0.4, scope: 'supporting' },
+  { source: 'Discrete Mathematics', target: 'Abstract Algebra', weight: 0.6, scope: 'supporting' },
+  { source: 'Abstract Algebra', target: 'Group Theory', weight: 0.9, scope: 'core' },
+  { source: 'Abstract Algebra', target: 'Ring Theory', weight: 0.9, scope: 'core' },
+  { source: 'Abstract Algebra', target: 'Field Theory', weight: 0.9, scope: 'core' },
+  { source: 'Field Theory', target: 'Galois Theory', weight: 1.0, scope: 'core' },
+  { source: 'Group Theory', target: 'Representation Theory', weight: 0.7, scope: 'supporting' },
+  { source: 'Abstract Algebra', target: 'Representation Theory', weight: 0.6, scope: 'supporting' },
 
   // Topology & geometry
-  { source: 'Set Theory', target: 'Topology' },
-  { source: 'Real Analysis', target: 'Topology' },
-  { source: 'Topology', target: 'Algebraic Topology' },
-  { source: 'Abstract Algebra', target: 'Algebraic Topology' },
-  { source: 'Topology', target: 'Algebraic Geometry' },
-  { source: 'Abstract Algebra', target: 'Algebraic Geometry' },
+  { source: 'Set Theory', target: 'Topology', weight: 0.6, scope: 'supporting' },
+  { source: 'Real Analysis', target: 'Topology', weight: 0.5, scope: 'supporting' },
+  { source: 'Topology', target: 'Algebraic Topology', weight: 0.9, scope: 'core' },
+  { source: 'Abstract Algebra', target: 'Algebraic Topology', weight: 0.6, scope: 'supporting' },
+  { source: 'Topology', target: 'Algebraic Geometry', weight: 0.6, scope: 'supporting' },
+  { source: 'Abstract Algebra', target: 'Algebraic Geometry', weight: 0.8, scope: 'core' },
 
   // Category & info
-  { source: 'Abstract Algebra', target: 'Category Theory' },
-  { source: 'Topology', target: 'Category Theory' },
-  { source: 'Functional Analysis', target: 'Category Theory' },
-  { source: 'Probability', target: 'Information Theory' },
-  { source: 'Linear Algebra', target: 'Information Theory' }
+  { source: 'Abstract Algebra', target: 'Category Theory', weight: 0.7, scope: 'supporting' },
+  { source: 'Topology', target: 'Category Theory', weight: 0.5, scope: 'supporting' },
+  { source: 'Functional Analysis', target: 'Category Theory', weight: 0.3, scope: 'optional' },
+  { source: 'Probability (Intro)', target: 'Information Theory', weight: 0.8, scope: 'core' },
+  { source: 'Linear Algebra', target: 'Information Theory', weight: 0.5, scope: 'supporting' }
 ];

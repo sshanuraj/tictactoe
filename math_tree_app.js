@@ -23,17 +23,19 @@
     (n.aliases || []).forEach(a => searchEntries.push({ label: a, canonical: n.id }));
   });
 
-  // Build maps
+  // Build maps (carry weights and scopes)
   const idToNode = new Map(nodes.map(n => [n.id.toLowerCase(), n]));
-  const parentsMap = new Map(); // targetLower -> [sourceLower]
-  const childrenMap = new Map(); // sourceLower -> [targetLower]
+  const parentsMap = new Map(); // targetLower -> [{ id, weight, scope }]
+  const childrenMap = new Map(); // sourceLower -> [{ id, weight, scope }]
   links.forEach(l => {
     const s = l.source.toLowerCase();
     const t = l.target.toLowerCase();
+    const w = l.weight != null ? l.weight : 0.5;
+    const scope = l.scope || 'supporting';
     if (!parentsMap.has(t)) parentsMap.set(t, []);
     if (!childrenMap.has(s)) childrenMap.set(s, []);
-    parentsMap.get(t).push(s);
-    childrenMap.get(s).push(t);
+    parentsMap.get(t).push({ id: s, weight: w, scope });
+    childrenMap.get(s).push({ id: t, weight: w, scope });
   });
 
   // DOM elements
@@ -78,6 +80,10 @@
   const zoomBehavior = d3.zoom().scaleExtent([0.25, 3]).on('zoom', (event) => g.attr('transform', event.transform));
   svg.call(zoomBehavior);
 
+  // Scales for weighted links
+  const widthScale = d3.scaleLinear().domain([0.1, 1]).range([1.5, 5]);
+  const opacityScale = d3.scaleLinear().domain([0.1, 1]).range([0.35, 1]);
+
   // Simulation
   const width = window.innerWidth;
   const height = window.innerHeight;
@@ -93,7 +99,9 @@
     .data(links)
     .join('line')
     .attr('class', 'link')
-    .attr('marker-end', 'url(#arrow)');
+    .attr('marker-end', 'url(#arrow)')
+    .style('stroke-width', d => widthScale(d.weight != null ? d.weight : 0.5))
+    .style('stroke-opacity', d => opacityScale(d.weight != null ? d.weight : 0.5));
 
   const node = g.append('g')
     .selectAll('g')
@@ -160,20 +168,50 @@
     infoTitle.textContent = n.id;
     infoDesc.textContent = n.desc || '—';
     const lower = n.id.toLowerCase();
-    const prereqs = (parentsMap.get(lower) || []).map(x => canonicalByLower.get(x) || x);
-    const nexts = (childrenMap.get(lower) || []).map(x => canonicalByLower.get(x) || x);
+    const prereqEdges = (parentsMap.get(lower) || []).slice().sort((a,b) => b.weight - a.weight);
+    const nextEdges = (childrenMap.get(lower) || []).slice().sort((a,b) => b.weight - a.weight);
+
+    function badge(scope) {
+      return `<span class="badge">${scope}</span>`;
+    }
+    function bar(widthPct) {
+      return `<div class="bar-wrap"><div class="bar" style="width:${Math.round(widthPct)}%"></div></div>`;
+    }
+
+    const prereqHtml = prereqEdges.length ? prereqEdges.map(e => {
+      const name = canonicalByLower.get(e.id) || e.id;
+      const pct = Math.min(100, Math.max(10, e.weight * 100));
+      return `<div class="item"><div><strong>${name}</strong> ${badge(e.scope)}</div>${bar(pct)}</div>`;
+    }).join('') : '<div class="item">None listed</div>';
+
+    const nextHtml = nextEdges.length ? nextEdges.map(e => {
+      const name = canonicalByLower.get(e.id) || e.id;
+      const pct = Math.min(100, Math.max(10, e.weight * 100));
+      return `<div class="item"><div><strong>${name}</strong> ${badge(e.scope)}</div>${bar(pct)}</div>`;
+    }).join('') : '<div class="item">—</div>';
+
     infoMeta.innerHTML = `
-      <div><strong>Prerequisites:</strong> ${prereqs.length ? prereqs.join(', ') : 'None listed'}</div>
-      <div><strong>Leads to:</strong> ${nexts.length ? nexts.join(', ') : '—'}</div>
+      <div><strong>Prerequisites (weighted):</strong></div>
+      <div class="prereq-list">${prereqHtml}</div>
+      <div style="height:8px"></div>
+      <div><strong>Leads to (weighted):</strong></div>
+      <div class="next-list">${nextHtml}</div>
     `;
     infoPanel.classList.add('visible');
   }
 
   // Highlighting
+  function reapplyBaseLinkStyles() {
+    link
+      .style('stroke-width', d => widthScale(d.weight != null ? d.weight : 0.5))
+      .style('stroke-opacity', d => opacityScale(d.weight != null ? d.weight : 0.5))
+      .attr('marker-end', 'url(#arrow)');
+  }
+
   function clearGlow() {
     node.classed('glow-node', false).classed('glow-target', false).classed('dim', false);
-    link.classed('glow-link', false).classed('dim', false)
-        .attr('marker-end', 'url(#arrow)');
+    link.classed('glow-link', false).classed('dim', false);
+    reapplyBaseLinkStyles();
   }
 
   function collectPrereqClosure(targetLower) {
@@ -184,8 +222,8 @@
       const cur = queue.shift();
       const parents = parentsMap.get(cur) || [];
       for (const p of parents) {
-        if (!visited.has(p)) { visited.add(p); queue.push(p); }
-        edgeKeys.add(`${p}||${cur}`);
+        if (!visited.has(p.id)) { visited.add(p.id); queue.push(p.id); }
+        edgeKeys.add(`${p.id}||${cur}`);
       }
     }
     return { nodes: visited, edges: edgeKeys };
@@ -227,9 +265,14 @@
 
     link.each(function(l) {
       const key = `${l.source.id.toLowerCase()}||${l.target.id.toLowerCase()}`;
+      const w = l.weight != null ? l.weight : 0.5;
       if (edgeSet.has(key)) {
-        d3.select(this).classed('glow-link', true).classed('dim', false)
-          .attr('marker-end', 'url(#arrow-glow)');
+        d3.select(this)
+          .classed('glow-link', true)
+          .classed('dim', false)
+          .attr('marker-end', 'url(#arrow-glow)')
+          .style('stroke-width', widthScale(w) + 1)
+          .style('stroke-opacity', Math.max(0.8, opacityScale(w)));
       }
     });
 
